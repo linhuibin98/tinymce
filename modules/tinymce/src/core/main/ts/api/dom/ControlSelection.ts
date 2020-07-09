@@ -465,7 +465,7 @@ const ControlSelection = (selection: Selection, editor: Editor): ControlSelectio
           Delay.setEditorTimeout(editor, () => editor.selection.select(node));
         };
 
-        if (isWithinContentEditableFalse(e.target)) {
+        if (isWithinContentEditableFalse(e.target) || NodeType.isMedia(e.target)) {
           e.preventDefault();
           delayedSelect(e.target);
           return;
