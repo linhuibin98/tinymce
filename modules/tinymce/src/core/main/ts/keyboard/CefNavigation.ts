@@ -91,7 +91,7 @@ const getVerticalRange = (editor: Editor, down: boolean): Range | null => {
   return null;
 };
 
-const moveH = (editor: Editor, forward: boolean) => (): boolean => {
+const moveH = (editor: Editor, forward: boolean): boolean => {
   const newRng = getHorizontalRange(editor, forward);
 
   if (newRng) {
@@ -102,7 +102,7 @@ const moveH = (editor: Editor, forward: boolean) => (): boolean => {
   }
 };
 
-const moveV = (editor: Editor, down: boolean) => (): boolean => {
+const moveV = (editor: Editor, down: boolean): boolean => {
   const newRng = getVerticalRange(editor, down);
 
   if (newRng) {
@@ -113,7 +113,7 @@ const moveV = (editor: Editor, down: boolean) => (): boolean => {
   }
 };
 
-const moveToLineEndPoint = (editor: Editor, forward: boolean) => (): boolean => {
+const moveToLineEndPoint = (editor: Editor, forward: boolean): boolean => {
   const isCefPosition = forward ? isAfterContentEditableFalse : isBeforeContentEditableFalse;
   return NavigationUtils.moveToLineEndPoint(editor, forward, isCefPosition);
 };

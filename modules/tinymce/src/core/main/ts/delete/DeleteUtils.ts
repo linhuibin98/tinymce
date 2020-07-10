@@ -23,39 +23,38 @@ const getParentBlock = (rootNode, elm: Element<DomNode>): Option<Element<DomNode
     : Option.none()
   );
 
-const placeCaretInEmptyBody = function (editor: Editor) {
+const placeCaretInEmptyBody = (editor: Editor) => {
   const body = editor.getBody();
   const node = body.firstChild && editor.dom.isBlock(body.firstChild) ? body.firstChild : body;
   editor.selection.setCursorLocation(node, 0);
 };
 
-const paddEmptyBody = function (editor: Editor) {
+const paddEmptyBody = (editor: Editor) => {
   if (editor.dom.isEmpty(editor.getBody())) {
     editor.setContent('');
     placeCaretInEmptyBody(editor);
   }
 };
 
-const willDeleteLastPositionInElement = function (forward: boolean, fromPos: CaretPosition, elm) {
-  return Options.lift2(
+const willDeleteLastPositionInElement = (forward: boolean, fromPos: CaretPosition, elm) =>
+  Options.lift2(
     CaretFinder.firstPositionIn(elm),
     CaretFinder.lastPositionIn(elm),
-    function (firstPos, lastPos) {
+    (firstPos, lastPos) => {
       const normalizedFirstPos = InlineUtils.normalizePosition(true, firstPos);
       const normalizedLastPos = InlineUtils.normalizePosition(false, lastPos);
       const normalizedFromPos = InlineUtils.normalizePosition(false, fromPos);
 
       if (forward) {
-        return CaretFinder.nextPosition(elm, normalizedFromPos).map(function (nextPos) {
-          return nextPos.isEqual(normalizedLastPos) && fromPos.isEqual(normalizedFirstPos);
-        }).getOr(false);
+        return CaretFinder.nextPosition(elm, normalizedFromPos).exists((nextPos) =>
+          nextPos.isEqual(normalizedLastPos) && fromPos.isEqual(normalizedFirstPos)
+        );
       } else {
-        return CaretFinder.prevPosition(elm, normalizedFromPos).map(function (prevPos) {
-          return prevPos.isEqual(normalizedFirstPos) && fromPos.isEqual(normalizedLastPos);
-        }).getOr(false);
+        return CaretFinder.prevPosition(elm, normalizedFromPos).exists((prevPos) =>
+          prevPos.isEqual(normalizedFirstPos) && fromPos.isEqual(normalizedLastPos)
+        );
       }
     }).getOr(true);
-};
 
 export {
   getParentBlock,
