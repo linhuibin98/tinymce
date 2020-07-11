@@ -8,13 +8,19 @@
 import Editor from 'tinymce/core/api/Editor';
 import Env from 'tinymce/core/api/Env';
 import Node from 'tinymce/core/api/html/Node';
+import Tools from 'tinymce/core/api/util/Tools';
 import * as Settings from '../api/Settings';
 import * as Sanitize from './Sanitize';
 import * as VideoScript from './VideoScript';
 
 declare let escape: any;
 
-const createPlaceholderNode = function (editor: Editor, node: Node) {
+const isLiveEmbedNode = (node: Node) => {
+  const name = node.name;
+  return name === 'iframe' || name === 'video' || name === 'audio';
+};
+
+const createPlaceholderNode = (editor: Editor, node: Node) => {
   const name = node.name;
 
   const placeHolder = new Node('img', 1);
@@ -34,7 +40,7 @@ const createPlaceholderNode = function (editor: Editor, node: Node) {
   return placeHolder;
 };
 
-const createPreviewIframeNode = function (editor: Editor, node: Node) {
+const createPreviewNode = (editor: Editor, node: Node) => {
   const name = node.name;
 
   const previewWrapper = new Node('span', 1);
@@ -50,13 +56,29 @@ const createPreviewIframeNode = function (editor: Editor, node: Node) {
   const previewNode = new Node(name, 1);
   previewNode.attr({
     src: node.attr('src'),
-    allowfullscreen: node.attr('allowfullscreen'),
     style: node.attr('style'),
     class: node.attr('class'),
     width: node.attr('width'),
-    height: node.attr('height'),
-    frameborder: '0'
+    height: node.attr('height')
   });
+
+  if (name === 'iframe') {
+    previewNode.attr({
+      allowfullscreen: node.attr('allowfullscreen'),
+      frameborder: '0'
+    });
+  } else {
+    // Exclude autoplay as we don't want video/audio to play by default
+    const attrs = [ 'controls', 'crossorigin', 'currentTime', 'loop', 'muted', 'poster', 'preload' ];
+    Tools.each(attrs, (attrName) => {
+      previewNode.attr(attrName, node.attr(attrName));
+    });
+
+    // Move the children over to the new preview node
+    while (node.firstChild) {
+      previewNode.append(node.firstChild);
+    }
+  }
 
   const shimNode = new Node('span', 1);
   shimNode.attr('class', 'mce-shim');
@@ -146,9 +168,9 @@ const placeHolderConverter = function (editor: Editor) {
         }
       }
 
-      if (node.name === 'iframe' && Settings.hasLiveEmbeds(editor) && Env.ceFalse) {
+      if (isLiveEmbedNode(node) && Settings.hasLiveEmbeds(editor) && Env.ceFalse) {
         if (!isWithinEmbedWrapper(node)) {
-          node.replace(createPreviewIframeNode(editor, node));
+          node.replace(createPreviewNode(editor, node));
         }
       } else {
         if (!isWithinEmbedWrapper(node)) {
@@ -160,7 +182,7 @@ const placeHolderConverter = function (editor: Editor) {
 };
 
 export {
-  createPreviewIframeNode,
+  createPreviewNode,
   createPlaceholderNode,
   placeHolderConverter
 };
